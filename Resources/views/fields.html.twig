@@ -68,13 +68,24 @@
 {% block shtumi_dependent_filtered_entity_widget %}
 
     <select {{ block('widget_attributes') }}></select>
-
+{% if selected_value == '' %}
+  {% set selected_value %}0{% endset %}
+{% endif %}
     <img src='{{ asset('bundles/shtumiuseful/images/ajax-loader.gif' ) }}' id='loader' style='display: none;'>
+
     <script type="text/javascript">
         jQuery(function(){
+{% if parent_field[0] is not defined %}
 
             jQuery("select#{{ form.parent.getChild( parent_field ).getVars().id }}").change( function() {
-                var selected_index = {{ value ? value : 0 }};
+                var selected = {{ selected_value }};
+                var selected_index = 0;
+                if (selected) {
+                    selected_index = selected;
+                    selected = null;
+                } else {
+                    selected_index = {{ value ? value : 0 }};
+                }
                 jQuery("#loader").show();
                 jQuery.ajax({
                     type: "POST",
@@ -104,6 +115,46 @@
                 });
             });
             jQuery("select#{{ form.parent.getChild( parent_field ).getVars().id }}").trigger('change');
+{% else %}
+    {% for pp in parent_field %}
+            jQuery("select#{{ form.parent.getChild( pp.form_id ).getVars().id }}").change( function() {
+                var selected_index = {{ value ? value : 0 }};
+                jQuery("#loader").show();
+                var data = {
+                {% for pf in parent_field %}
+                    {{ pf.entity_field }}: jQuery("select#{{ form.parent.getChild( pf.form_id ).getVars().id }}").val(),
+                {% endfor %}
+                };
+                jQuery.ajax({
+                    type: "POST",
+                    data: {
+                        parent_id: data,
+                        entity_alias: "{{ entity_alias }}",
+                        empty_value: "{{ empty_value }}"
+                    },
+                    url:"{{ path('shtumi_dependent_filtered_entity') }}",
+                    success: function(msg){
+                        if (msg != ''){
+                            jQuery("select#{{ form.getVars().id }}").html(msg).show();
+                            jQuery.each(jQuery("select#{{ form.getVars().id }} option"), function (index, option){
+                                if (jQuery(option).val() == selected_index)
+                                    jQuery(option).attr('selected', 'selected');
+                            })
+                            jQuery("select#{{ form.getVars().id }}").trigger('change');
+                            jQuery("#loader").hide();
+                        } else {
+                            jQuery("select#{{ form.getVars().id }}").html('<em>{{ no_result_msg|trans() }}</em>');
+                            jQuery("#loader").hide();
+                        }
+                    },
+                    error: function(xhr, ajaxOptions, thrownError){
+                    jQuery('html').html(xhr.responseText);
+                    }
+                });
+            });
+            jQuery("select#{{ form.parent.getChild( pp.form_id ).getVars().id }}").trigger('change');
+    {% endfor %}
+{% endif %}
         });
     </script>
 

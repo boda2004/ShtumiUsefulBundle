@@ -25,6 +25,7 @@ class DependentFilteredEntityType extends AbstractType
             'empty_value'       => '',
             'entity_alias'      => null,
             'parent_field'      => null,
+            'selected_value'    => null,
             'compound'          => false
         ));
     }
@@ -41,7 +42,6 @@ class DependentFilteredEntityType extends AbstractType
 
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-
         $entities = $this->container->getParameter('shtumi.dependent_filtered_entities');
         $options['class'] = $entities[$options['entity_alias']]['class'];
         $options['property'] = $entities[$options['entity_alias']]['property'];
@@ -58,6 +58,7 @@ class DependentFilteredEntityType extends AbstractType
         $builder->setAttribute("parent_field", $options['parent_field']);
         $builder->setAttribute("entity_alias", $options['entity_alias']);
         $builder->setAttribute("no_result_msg", $options['no_result_msg']);
+        $builder->setAttribute("selected_value", $options['selected_value']);
         $builder->setAttribute("empty_value", $options['empty_value']);
 
     }
@@ -67,6 +68,7 @@ class DependentFilteredEntityType extends AbstractType
         $view->set('parent_field', $form->getAttribute('parent_field'));
         $view->set('entity_alias', $form->getAttribute('entity_alias'));
         $view->set('no_result_msg', $form->getAttribute('no_result_msg'));
+        $view->set('selected_value', $form->getAttribute('selected_value'));
         $view->set('empty_value', $form->getAttribute('empty_value'));
     }
 
